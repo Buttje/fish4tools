@@ -1,0 +1,8 @@
+#ifndef FISH4TOOLS_VERSION_H
+#define FISH4TOOLS_VERSION_H
+
+#define FISH4TOOLS_VERSION_MAJOR  
+#define FISH4TOOLS_VERSION_MINOR 
+#define FISH4TOOLS_MAINTAINER "lutz.pape@gmail.com"
+
+#endif
