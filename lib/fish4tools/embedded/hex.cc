@@ -1,8 +1,9 @@
-#include <misc.hpp>
+#include <embedded.hpp>
 #include <inttypes.h>
+#include <string>
 #include <cctype>
 
-namespace tribble {
+namespace fish4tools::embedded {
 
 /**
  * @brief isHex checks, if the given string containd a valid hexadecimal value

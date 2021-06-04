@@ -1,0 +1,5 @@
+add_test( Embedded.char2Byte /home/lutz/Projects/fish4tools/tests/bin/UTest_fish4toolsEmbedded [==[--gtest_filter=Embedded.char2Byte]==] --gtest_also_run_disabled_tests)
+set_tests_properties( Embedded.char2Byte PROPERTIES WORKING_DIRECTORY /home/lutz/Projects/fish4tools/build/tests/fish4toolsLib)
+add_test( Data.Node_left_right_depth /home/lutz/Projects/fish4tools/tests/bin/UTest_fish4toolsEmbedded [==[--gtest_filter=Data.Node_left_right_depth]==] --gtest_also_run_disabled_tests)
+set_tests_properties( Data.Node_left_right_depth PROPERTIES WORKING_DIRECTORY /home/lutz/Projects/fish4tools/build/tests/fish4toolsLib)
+set( UTest_fish4toolsEmbedded_TESTS Embedded.char2Byte Data.Node_left_right_depth)
