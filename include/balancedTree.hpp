@@ -20,26 +20,43 @@ namespace fish4tools::data {
     template<class K, class O>
     class BalancedTree {
         public:
+
+            BalancedTree(uint16_t capacity) {
+                maxCapacity=capacity;
+                if (maxCapacity>0) {
+                   container=(TreeNode<K, O>*)malloc(maxCapacity*sizeof(TreeNode<K, O>));
+                   memset(container, 0, maxCapacity*sizeof(TreeNode<K, O>));
+                }
+            }
+
             bool insert(K key, O* object) {
                 
+                if (maxCapacity<1) return false;
+                if (actCapacity>=maxCapacity) return false;
+
                 if (root==nullptr) {
-                    root=new TreeNode<K, O>(key, *object);
+                    root=container;
+                    root[0].key = key;
+                    root[0].object = object;
+                    actCapacity++;
                     return true; //success
                 }
-                return insert(root, key, object);
+                return insertAndBalance(root, key, object);
             }
 
             O* get(K key) {
                 TreeNode<K,O>* actualNode = root;
                 O* foundObject = nullptr;
 
+                if (actCapacity==0) return nullptr;
+
                 while (actualNode && !foundObject) {
-                    if (actualNode->getKey()==key) {
-                        foundObject = actualNode->getObject();
-                        if (actualNode->getKey()>key) {
-                            actualNode=actualNode->getLeft();
+                    if (actualNode->key==key) {
+                        foundObject = actualNode->object;
+                        if (actualNode->key > key) {
+                            actualNode=actualNode->left;
                         } else {
-                            actualNode=actualNode->getRight();;
+                            actualNode=actualNode->left;;
                         }
                     }
                 }
@@ -47,153 +64,180 @@ namespace fish4tools::data {
             }
 
             uint16_t getLeftDepth() {  /// for the curious lot
-                if (!root) return 0;
+                if (actCapacity==0) return 0;
                 return root->leftDepth();
             }; 
 
             uint16_t getRightDepth() { /// for the curious lot
-                if (!root) return 0;
+                if (actCapacity==0) return 0;
                 return root->rightDepth();
             }; 
 
         private:
-            enum tBalance {LEFT, EVEN, RIGHT};
             TreeNode<K, O>* root = nullptr; /// Pointer to the root-node of the tree
+            TreeNode<K, O>* container = nullptr; /// Pointer to the pre-allocated container
+            uint16_t maxCapacity=0;
+            uint16_t actCapacity=0;
 
-            bool insert(TreeNode<K, O>* root, K key, O* object) {  /// adding a node
-                bool success = false;
-                
-                if (key == root->getKey()) return false; // key exists
 
-                if (key < root->getKey()) {
-                    success = handleLeft(root, key, object);
-                } else {
-                    success = handleRight(root, key, object);
+            bool insertAndBalance(TreeNode<K, O>* parent, K key, O* object) {
+                bool success=true;
+
+                if (parent->key==key) {
+                    return false;
                 }
+
+                if (parent->key > key) {
+                    if (parent->left == nullptr) {
+                        container[actCapacity].key=key;
+                        container[actCapacity].object=object;
+                        container[actCapacity].parent=parent;
+                        parent->left=&(container[actCapacity]);
+                        actCapacity++;
+                    } else {
+                        success = insertAndBalance(parent->left, key, object);
+                    }
+                } else {
+                    if (parent->right == nullptr) {
+                        container[actCapacity].key=key;
+                        container[actCapacity].object=object;
+                        container[actCapacity].parent=parent;
+                        parent->right=&(container[actCapacity]);
+                        actCapacity++;
+                    } else {
+                        success = insertAndBalance(parent->right, key, object);
+                    }
+                }
+                if (!success) {
+                    return false;
+                }
+
+                balance(parent);
+
                 return success;
-            }; 
+            };
 
+            void balance(TreeNode<K,O>* topNode) {
+                int32_t balance;
 
-            bool handleLeft(TreeNode<K, O>* parent, K key, O* object) {  /// adding a node to the left
-                bool success = false;
-               
-                if (parent->getLeft()==nullptr) {
-                    parent->setLeft(new TreeNode<K,O>(key, *object));
-                    success = true;
+                if (!topNode) {
+                    return;
+                }
+
+                balance=topNode->leftDepth() - topNode->rightDepth();
+                if (balance > 1) {
+                   topNode = reTopFromLeft(topNode);
+                } else if (balance < -1) {
+                   topNode = reTopFromRight(topNode);
+                }
+
+                this->balance(topNode->left);
+                this->balance(topNode->right);
+            };
+
+            TreeNode<K,O>* reTopFromLeft(TreeNode<K,O>* oldTopNode) {
+                TreeNode<K,O>* oldLeftNode = oldTopNode->left;
+                TreeNode<K,O>* newTopNode = oldLeftNode;
+                TreeNode<K,O>* newTopLeftOvers = nullptr;
+                bool oldLeftIsNewTop = false;
+
+                if (!oldLeftNode) return oldTopNode;
+
+                while(newTopNode->right) {
+                    newTopNode=newTopNode->right;
+                }
+                oldLeftIsNewTop=(oldLeftNode==newTopNode);
+                if (!oldLeftIsNewTop) {
+                    newTopLeftOvers=newTopNode->left;
+                    if (newTopLeftOvers) {
+                         while(newTopLeftOvers->left) {
+                             newTopLeftOvers=newTopLeftOvers->left;
+                         }
+                    }
+                }
+                if(oldLeftIsNewTop) {
+                    newTopNode->parent->left = nullptr;
                 } else {
-                    success=insert(parent->getLeft(), key, object);
+                    newTopNode->parent->right = nullptr;
                 }
-
-                if ((parent->leftDepth()-parent->rightDepth())>1) {
-                    balanceLeft(parent);
-                    parent->leftDepth();
-                    parent->rightDepth();
-                }
-
-                return success;
-            }; 
-
-
-            void balanceLeft(TreeNode<K,O>* node) {
-                TreeNode<K,O>* oldLeft=node->getLeft();
-                TreeNode<K,O>* newTopNode=oldLeft;
-                TreeNode<K,O>* connectPoint=nullptr;
-                bool oldPosOnTop=true;
-                //find the largest node in the left 'smaller' tree
-                while(newTopNode->getRight()) {
-                    newTopNode=newTopNode->getRight();
-                    oldPosOnTop=false;
-                }
-                
-                if (!oldPosOnTop) {
-                    newTopNode->getParent()->setRight(nullptr, false);
-                } else {
-                    oldLeft->setRight(nullptr, false);
-                }
-                if (node->getParent()==nullptr) {
+                if(oldTopNode->parent==nullptr) {
                     root=newTopNode;
-                    newTopNode->setParent(nullptr);
+                    newTopNode->parent = nullptr;
                 } else {
-                    newTopNode->getParent()->setRight(nullptr,false);
-                    node->getParent()->setLeft(newTopNode, true);
-                }
-                newTopNode->setRight(node, true);
-                node->setLeft(nullptr, false);
-                
-                if (!oldPosOnTop) {
-                    connectPoint=newTopNode->getLeft();
-                    if (connectPoint) {
-                        while(connectPoint->getLeft()) {
-                            connectPoint=connectPoint->getLeft();
-                        }
-                        connectPoint->setLeft(oldLeft);
+                     newTopNode->parent=oldTopNode->parent;
+                    if (oldTopNode->parent->left==oldTopNode) {
+                        oldTopNode->parent->left = newTopNode;
                     } else {
-                        newTopNode->setLeft(oldLeft);
+                        oldTopNode->parent->right = newTopNode;
                     }
                 }
-
-                if (!oldPosOnTop) {
-                    balanceLeft(oldLeft);
-                }
-            };
-
-            bool handleRight(TreeNode<K, O>* parent, K key, O* object) {  /// adding a node to the left
-                bool success = false;
-              
-                if (parent->getRight()==nullptr) {
-                    parent->setRight(new TreeNode<K,O>(key, *object));
-                    success = true;
-                } else {
-                    success=insert(parent->getRight(), key, object);
-                }
-
-                if ((parent->rightDepth()-parent->leftDepth())>1) {
-                    balanceRight(parent);
-                }
-            
-                return success;
-            }; 
-
-            void balanceRight(TreeNode<K,O>* node) {
-                TreeNode<K,O>* oldRight=node->getRight();
-                TreeNode<K,O>* smallestNode=oldRight;
-                TreeNode<K,O>* connectPoint=nullptr;
-                bool smallestOnTop=true;
-                //find the largest node in the left 'smaller' tree
-                while(smallestNode->getLeft()) {
-                    smallestNode=smallestNode->getLeft();
-                    smallestOnTop=false;
-                }
-                
-                if (!smallestOnTop) {
-                    smallestNode->getParent()->setLeft(nullptr, false);
-                } else {
-                    oldRight->setLeft(nullptr, false);
-                }
-                if (node->getParent()==nullptr) {
-                    root=smallestNode;
-                    smallestNode->setParent(nullptr);
-                } else {
-                    smallestNode->getParent()->setLeft(nullptr,false);
-                    node->getParent()->setLeft(smallestNode, true);
-                }
-                smallestNode->setLeft(node, true);
-                node->setRight(nullptr, false);
-                
-                if (!smallestOnTop) {
-                    connectPoint=smallestNode->getRight();
-                    if (connectPoint) {
-                        while(connectPoint->getRight()) {
-                            connectPoint=connectPoint->getRight();
-                        }
-                        connectPoint->setRight(oldRight);
+                newTopNode->right = oldTopNode;
+                newTopNode->right->parent = newTopNode;
+                oldTopNode->left = nullptr;
+                if (!oldLeftIsNewTop) {
+                    if (newTopLeftOvers) {
+                        newTopLeftOvers->left = oldLeftNode;
+                        newTopLeftOvers->left->parent = newTopLeftOvers;
                     } else {
-                        smallestNode->setRight(oldRight);
+                        newTopNode->left = oldLeftNode;
+                        newTopNode->left->parent=newTopNode;
                     }
                 }
-            };
+                return newTopNode;
+            }
 
-            
+            TreeNode<K,O>* reTopFromRight(TreeNode<K,O>* oldTopNode) {
+                TreeNode<K,O>* oldRightNode = oldTopNode->right;
+                TreeNode<K,O>* newTopNode = oldRightNode;
+                TreeNode<K,O>* newTopLeftOvers = nullptr;
+                bool oldRightIsNewTop = false;
+
+                if (!oldRightNode) return oldTopNode;
+
+                while(newTopNode->left) {
+                    newTopNode=newTopNode->left;
+                }
+                oldRightIsNewTop=(oldRightNode==newTopNode);
+                if (!oldRightIsNewTop) {
+                    newTopLeftOvers=newTopNode->right;
+                    if (newTopLeftOvers) {
+                         while(newTopLeftOvers->right) {
+                             newTopLeftOvers=newTopLeftOvers->right;
+                         }
+                    }
+                }
+                if(oldRightIsNewTop) {
+                    newTopNode->parent->right=nullptr;
+                } else {
+                    newTopNode->parent->left=nullptr;
+                }
+                if(oldTopNode->parent==nullptr) {
+                    root=newTopNode;
+                    newTopNode->parent = nullptr;
+                } else {
+                    newTopNode->parent=oldTopNode->parent;
+                    if (oldTopNode->parent->left==oldTopNode) {
+                        oldTopNode->parent->left=newTopNode;
+                    } else {
+                        oldTopNode->parent->right=newTopNode;
+                    }
+                }
+                newTopNode->left=oldTopNode;
+                newTopNode->left->parent=newTopNode;
+                oldTopNode->right=nullptr;
+                if (!oldRightIsNewTop) {
+                    if (newTopLeftOvers) {
+                        oldRightNode->parent=newTopLeftOvers;
+                        newTopLeftOvers->right=oldRightNode;
+                    } else {
+                        oldRightNode->parent=newTopNode;
+                        newTopNode->right=oldRightNode;
+                    }
+                }
+                return newTopNode;
+            }
+
+
     };
 }
 

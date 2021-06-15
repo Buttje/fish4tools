@@ -1,6 +1,4 @@
 set(SOURCES
- # data/node.cc
- # data/balancedTree.cc
   embedded/hex.cc
 )
 

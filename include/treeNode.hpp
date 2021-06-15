@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -20,27 +21,11 @@ namespace fish4tools::data {
                 this->object=&object;
             }
 
-            void setLeft(TreeNode<K, O>* treeNode) {
-                left=treeNode;
-                treeNode->setParent(this);
-            }
-
-            void setRight(TreeNode<K, O>* treeNode) {
-                right=treeNode;
-                treeNode->setParent(this);
-            }
-
-            TreeNode<K,O>* getParent() {
-                return parent;
-            }
-
-            TreeNode<K,O>* getLeft() {
-                return left;
-            }
-
-            TreeNode<K,O>* getRight() {
-                return right;
-            }
+            K key; /// The sorting key 
+            O* object = nullptr; /// The object
+            TreeNode* left = nullptr; /// Left branch
+            TreeNode* right = nullptr; /// Right branch
+            TreeNode* parent = nullptr; /// Right branch
 
             uint16_t leftDepth() {  /// Returns the dpeth of the left branch
                 uint16_t rightDepth;
@@ -54,10 +39,11 @@ namespace fish4tools::data {
                     return 1;
                 }
             } 
+
             uint16_t rightDepth() {  /// Returns the dpeth of the right branch
                 uint16_t rightDepth;
                 uint16_t leftDepth;
-                
+
                 if (right) {
                     rightDepth=right->rightDepth();
                     leftDepth=right->leftDepth();
@@ -66,35 +52,8 @@ namespace fish4tools::data {
                     return 1;
                 }
             } 
-            int8_t getBalance() {  /// Used by the symbolTree to manage the balancing
-                uint16_t ld = leftDepth();
-                    uint16_t rd = rightDepth();
-                    _balance=0;
-
-                    if (abs(ld-rd)>2) {
-                        if (ld>rd) {
-                            _balance=-1;
-                        } else {
-                            _balance=1;
-                        }
-                    }
-                    return(_balance);
-            } 
-
-            void setBalance(int8_t balance) {
-                 _balance=balance;
-            } /// Used by the symbolTree to manage the balancing
 
         private:
-            int8_t _balance=0;
-            K key; /// The sorting key as String, since all members of the @ref Symbol class are Strings
-            O* object = nullptr; /// The object
-            TreeNode* left = nullptr; /// Left branch
-            TreeNode* right = nullptr; /// Right branch
-            TreeNode* parent = nullptr; /// Right branch
-            void setParent(TreeNode<K, O>* treeNode) {
-                parent=treeNode;
-            }
     };
 }
 

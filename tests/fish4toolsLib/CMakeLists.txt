@@ -1,6 +1,7 @@
 set(SOURCES
   test_fish4toolsEmbedded.cc
-  test_fish4toolsData.cc
+  test_fish4toolsDataTreeNode.cc
+  test_fish4toolsDataBalancedTree.cc
   gtest_main.cc
 )
 
