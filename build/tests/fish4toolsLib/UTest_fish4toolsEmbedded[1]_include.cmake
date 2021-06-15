@@ -1,5 +1,0 @@
-if(EXISTS "/home/lutz/Projects/fish4tools/build/tests/fish4toolsLib/UTest_fish4toolsEmbedded[1]_tests.cmake")
-  include("/home/lutz/Projects/fish4tools/build/tests/fish4toolsLib/UTest_fish4toolsEmbedded[1]_tests.cmake")
-else()
-  add_test(UTest_fish4toolsEmbedded_NOT_BUILT UTest_fish4toolsEmbedded_NOT_BUILT)
-endif()
