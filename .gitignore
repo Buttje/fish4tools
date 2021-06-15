@@ -13,5 +13,6 @@ _deps
 .git
 .vscode
 bin
+build
 doc
 fish4tools.code-workspace
