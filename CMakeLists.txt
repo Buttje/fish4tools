@@ -5,6 +5,16 @@ cmake_minimum_required(VERSION 3.1)
 
 project(fish4tools VERSION 0.1)
 enable_testing()
+add_custom_command ( OUTPUT doc/API/html/index.html 
+                     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/buildApiDoc.sh
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/)
+add_custom_command ( OUTPUT doc/UserDoc/index.html 
+                     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/buildUserDoc.sh
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/)
+add_custom_target(
+  BuildDocs ALL
+  DEPENDS doc/API/html/index.html doc/UserDoc/index.html
+)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include_directories(cmake)
